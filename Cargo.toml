@@ -1,6 +1,6 @@
 [package]
 name = "scheduler"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Zach Pomerantz <zach@terminal.com>"]
 description = "Binding to set the linux scheduler (priority, policy, &c.)"
 homepage = "https://github.com/terminalcloud/rust-scheduler"
@@ -11,4 +11,5 @@ keywords = ["sched", "scheduler"]
 exclude = ["Cargo.lock", ".gitignore"]
 
 [dependencies]
+errno = "*"
 libc = "*"
