@@ -6,7 +6,7 @@ description = "Binding to set the linux scheduler (priority, policy, &c.)"
 homepage = "https://github.com/terminalcloud/rust-scheduler"
 repository = "https://github.com/terminalcloud/rust-scheduler"
 readme = "README.md"
-keywords = ["sched.h", "resource.h", "scheduler"]
+keywords = ["sched", "scheduler"]
 exclude = ["Cargo.lock", ".gitignore"]
 
 [dependencies]
