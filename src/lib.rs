@@ -2,6 +2,7 @@
 //!
 //! Just enough to set the scheduler priority.
 #![deny(missing_docs)]
+extern crate errno;
 extern crate libc;
 
 mod ffi;

@@ -1,4 +1,5 @@
 //! Set and get program scheduling priority
+use errno::{Errno, errno, set_errno};
 use ffi::resource::*;
 
 /// Which identifier type to use (`pid`, `gid`, or `uid`)
@@ -45,6 +46,10 @@ pub fn get_priority(which: Which, who: i32) -> Result<i32, ()> {
         Which::User => PRIO_USER,
     };
 
+    set_errno(Errno(0));
     let priority = unsafe { getpriority(c_which, who) };
-    Ok(priority)
+    match errno().0 {
+        0 => Ok(priority),
+        _ => Err(())
+    }
 }
