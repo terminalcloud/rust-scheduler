@@ -5,8 +5,11 @@
 extern crate libc;
 
 mod ffi;
-pub mod sched;
-pub mod resource;
+mod sched;
+mod resource;
+
+pub use sched::*;
+pub use resource::*;
 
 #[test]
 fn it_works() {
