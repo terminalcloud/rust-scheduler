@@ -3,7 +3,6 @@ os: linux
 rust:
     - stable
     - nightly
-sudo: false
+sudo: required
 script:
     - cargo test
-
