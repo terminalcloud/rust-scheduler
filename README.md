@@ -8,3 +8,5 @@ Currently only binds:
 - sched_getscheduler
 - setpriority
 - getpriority
+- sched_setaffinity
+- sched_getaffinity

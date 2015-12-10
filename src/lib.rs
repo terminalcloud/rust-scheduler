@@ -8,10 +8,8 @@ extern crate libc;
 mod ffi;
 mod sched;
 mod resource;
+mod cpuset;
 
 pub use sched::*;
 pub use resource::*;
-
-#[test]
-fn it_works() {
-}
+pub use cpuset::CpuSet;
