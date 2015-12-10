@@ -22,6 +22,8 @@ pub mod sched {
     extern {
         pub fn sched_setscheduler(pid: pid_t, policy: c_int, param: *const SchedParam) -> c_int;
         pub fn sched_getscheduler(pid: pid_t) -> c_int;
+        pub fn sched_setaffinity(pid: pid_t, cpusetsize: size_t, mask: *const c_void) -> c_int;
+        pub fn sched_getaffinity(pid: pid_t, cpusetsize: size_t, mask: *mut c_void) -> c_int;
         // TODO: Other fns guaranteed by `man sched.h`
     }
 }
