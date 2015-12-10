@@ -1,5 +1,6 @@
 //! Set and get scheduling policies
 use ffi::sched::*;
+use cpuset::CpuSet;
 
 /// Policies that may be set
 ///
@@ -57,5 +58,56 @@ pub fn get_policy(pid: i32) -> Result<Policy, ()> {
         SCHED_DEADLINE => Ok(Policy::Deadline),
         -1 => Err(()),
         policy @ _ => panic!("Policy {} does not exist", policy)
+    }
+}
+
+/// Set the cpu affinity for the current thread See `set_affinity`.
+pub fn set_self_affinity(cpuset: CpuSet) -> Result<(), ()> {
+    set_affinity(0, cpuset)
+}
+
+/// Set the cpu affinity for a thread.
+pub fn set_affinity(pid: i32, cpuset: CpuSet) -> Result<(), ()> {
+    cpuset.set_affinity(pid)
+}
+
+/// Get the cpu affinity for the current thread. See `get_affinity`.
+pub fn get_self_affinity(num_cpus: usize) -> Result<CpuSet, ()> {
+    get_affinity(0, num_cpus)
+}
+
+/// Get the cpu affinity for a thread.
+///
+/// Create and return a `CpuSet` that has room for at least `num_cpus` and with those set
+/// according to the current affinity.
+pub fn get_affinity(pid: i32, num_cpus: usize) -> Result<CpuSet, ()> {
+    CpuSet::get_affinity(pid, num_cpus)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{get_self_affinity, set_self_affinity};
+    use cpuset::CpuSet;
+
+    #[test]
+    fn test_set_get_self_affinity() {
+        let mask: u64 = 1; // CPU 0 only
+        set_self_affinity(CpuSet::from_mask(mask)).unwrap();
+        let read_mask = get_self_affinity(1).unwrap().as_u64().unwrap();
+        assert_eq!(mask, read_mask);
+    }
+
+
+    #[test]
+    fn test_set_get_self_affinity_2() {
+        let mask: u64 = 1 << 0 | 1 << 1; // CPU 0 & 1
+        set_self_affinity(CpuSet::from_mask(mask)).unwrap();
+        let read_mask = get_self_affinity(2).unwrap().as_u64().unwrap();
+        assert_eq!(mask, read_mask);
+    }
+
+    #[test]
+    fn test_set_affinity_no_cpu() {
+        assert!(set_self_affinity(CpuSet::new(0)).is_err());
     }
 }
