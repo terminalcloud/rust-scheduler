@@ -18,7 +18,7 @@ pub mod sched {
         // TODO: _POSIX_(THREAD)_SPORADIC_SERVER
     }
 
-    #[link(name="libc")]
+    #[link(name="c")]
     extern {
         pub fn sched_setscheduler(pid: pid_t, policy: c_int, param: *const SchedParam) -> c_int;
         pub fn sched_getscheduler(pid: pid_t) -> c_int;
@@ -35,7 +35,7 @@ pub mod resource {
     pub const PRIO_GROUP: c_int = 1;
     pub const PRIO_USER: c_int = 2;
 
-    #[link(name="libc")]
+    #[link(name="c")]
     extern {
         pub fn setpriority(which: c_int, who: c_int, priority: c_int) -> c_int;
         pub fn getpriority(which: c_int, who: c_int) -> c_int;
