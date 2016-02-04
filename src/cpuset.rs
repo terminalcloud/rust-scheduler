@@ -1,11 +1,9 @@
 //! A CPU bitmask implementation to be used with the sched_[gs]etaffinity functions.
 
-use libc::c_void;
+use libc::{c_void, cpu_set_t, sched_getaffinity, sched_setaffinity};
 use std::mem;
 use std::ptr;
 use std::cmp;
-
-use ffi::sched::{sched_getaffinity, sched_setaffinity};
 
 type Mask = u64;
 const MASK_BITS: usize = 64;
@@ -110,7 +108,7 @@ impl CpuSet {
 
     /// Sets the affinity described by this `CpuSet` to a given `pid`.
     pub fn set_affinity(&self, pid: i32) -> Result<(), ()> {
-        match unsafe { sched_setaffinity(pid, self.len(), self.mask_ptr()) } {
+        match unsafe { sched_setaffinity(pid, self.len(), self.mask_ptr() as *const cpu_set_t) } {
             0 => Ok(()),
             _ => Err(()),
         }
@@ -119,7 +117,7 @@ impl CpuSet {
     /// Fetch the affinity for a given `pid` as a `CpuSet`.
     pub fn get_affinity(pid: i32, num_cpus: usize) -> Result<CpuSet, ()> {
         let mut cpuset = CpuSet::new(num_cpus);
-        match unsafe { sched_getaffinity(pid, cpuset.len(), cpuset.mut_mask_ptr())} {
+        match unsafe { sched_getaffinity(pid, cpuset.len(), cpuset.mut_mask_ptr() as *mut cpu_set_t)} {
             0 => Ok(cpuset),
             _ => Err(()),
         }

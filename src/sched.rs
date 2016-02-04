@@ -1,6 +1,13 @@
 //! Set and get scheduling policies
-use ffi::sched::*;
+#[cfg(any(target_os = "linux", target_os = "android", target_os = "emscripten"))]
+use libc::{c_int, sched_param, sched_getscheduler, sched_setscheduler, SCHED_FIFO, SCHED_RR,
+    SCHED_BATCH, SCHED_IDLE, SCHED_OTHER};
+#[cfg(any(target_os = "linux", target_os = "emscripten"))]
 use cpuset::CpuSet;
+
+/// Does not exist in libc yet for some reason. Can be removed when added to libc
+#[cfg(any(target_os = "linux", target_os = "android", target_os = "emscripten"))]
+const SCHED_DEADLINE: c_int = 6;
 
 /// Policies that may be set
 ///
@@ -10,7 +17,7 @@ use cpuset::CpuSet;
 /// If you are considering another policy, consider updating this source as well.
 #[allow(missing_docs)]
 pub enum Policy {
-    Normal,
+    Other,
     Fifo,
     RoundRobin,
     Batch,
@@ -19,22 +26,24 @@ pub enum Policy {
 }
 
 /// Set the scheduling policy for this process
+#[cfg(any(target_os = "linux", target_os = "android", target_os = "emscripten"))]
 pub fn set_self_policy(policy: Policy, priority: i32) -> Result<(), ()> {
     set_policy(0, policy, priority)
 }
 
 /// Set the scheduling policy for a process
+#[cfg(any(target_os = "linux", target_os = "android", target_os = "emscripten"))]
 pub fn set_policy(pid: i32, policy: Policy, priority: i32) -> Result<(), ()> {
     let c_policy = match policy {
-        Policy::Normal => SCHED_NORMAL,
+        Policy::Other => SCHED_OTHER,
         Policy::Fifo => SCHED_FIFO,
         Policy::RoundRobin => SCHED_RR,
         Policy::Batch => SCHED_BATCH,
         Policy::Idle => SCHED_IDLE,
         Policy::Deadline => SCHED_DEADLINE
     };
-    let params = SchedParam { priority: priority };
-    let params_ptr: *const SchedParam = &params;
+    let params = sched_param { sched_priority: priority };
+    let params_ptr: *const sched_param = &params;
 
     match unsafe { sched_setscheduler(pid, c_policy, params_ptr) } {
         0 => Ok(()),
@@ -43,14 +52,16 @@ pub fn set_policy(pid: i32, policy: Policy, priority: i32) -> Result<(), ()> {
 }
 
 /// Get the scheduling policy for this process
+#[cfg(any(target_os = "linux", target_os = "android", target_os = "emscripten"))]
 pub fn get_self_policy() -> Result<Policy, ()> {
     get_policy(0)
 }
 
 /// Get the scheduling policy for a process
+#[cfg(any(target_os = "linux", target_os = "android", target_os = "emscripten"))]
 pub fn get_policy(pid: i32) -> Result<Policy, ()> {
     match unsafe { sched_getscheduler(pid) } {
-        SCHED_NORMAL => Ok(Policy::Normal),
+        SCHED_OTHER => Ok(Policy::Other),
         SCHED_FIFO => Ok(Policy::Fifo),
         SCHED_RR => Ok(Policy::RoundRobin),
         SCHED_BATCH => Ok(Policy::Batch),
@@ -62,16 +73,19 @@ pub fn get_policy(pid: i32) -> Result<Policy, ()> {
 }
 
 /// Set the cpu affinity for the current thread See `set_affinity`.
+#[cfg(any(target_os = "linux", target_os = "emscripten"))]
 pub fn set_self_affinity(cpuset: CpuSet) -> Result<(), ()> {
     set_affinity(0, cpuset)
 }
 
 /// Set the cpu affinity for a thread.
+#[cfg(any(target_os = "linux", target_os = "emscripten"))]
 pub fn set_affinity(pid: i32, cpuset: CpuSet) -> Result<(), ()> {
     cpuset.set_affinity(pid)
 }
 
 /// Get the cpu affinity for the current thread. See `get_affinity`.
+#[cfg(any(target_os = "linux", target_os = "emscripten"))]
 pub fn get_self_affinity(num_cpus: usize) -> Result<CpuSet, ()> {
     get_affinity(0, num_cpus)
 }
@@ -80,11 +94,13 @@ pub fn get_self_affinity(num_cpus: usize) -> Result<CpuSet, ()> {
 ///
 /// Create and return a `CpuSet` that has room for at least `num_cpus` and with those set
 /// according to the current affinity.
+#[cfg(any(target_os = "linux", target_os = "emscripten"))]
 pub fn get_affinity(pid: i32, num_cpus: usize) -> Result<CpuSet, ()> {
     CpuSet::get_affinity(pid, num_cpus)
 }
 
 #[cfg(test)]
+#[cfg(any(target_os = "linux", target_os = "emscripten"))]
 mod tests {
     use super::{get_self_affinity, set_self_affinity};
     use cpuset::CpuSet;

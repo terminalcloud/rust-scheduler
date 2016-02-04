@@ -1,33 +1,3 @@
-//! See `man sched.h` and `man resource.h`
-pub mod sched {
-    //! Bindings to `sched.h`
-    use libc::*;
-
-    // http://lxr.free-electrons.com/source/include/uapi/linux/sched.h#L37
-    pub const SCHED_NORMAL: c_int = 0;
-    pub const SCHED_FIFO: c_int = 1;
-    pub const SCHED_RR: c_int = 2;
-    pub const SCHED_BATCH: c_int = 3;
-     /* SCHED_ISO: reserved but not implemented yet */
-    pub const SCHED_IDLE: c_int = 5;
-    pub const SCHED_DEADLINE: c_int = 6;
-
-    #[repr(C)]
-    pub struct SchedParam {
-        pub priority: c_int
-        // TODO: _POSIX_(THREAD)_SPORADIC_SERVER
-    }
-
-    #[link(name="c")]
-    extern {
-        pub fn sched_setscheduler(pid: pid_t, policy: c_int, param: *const SchedParam) -> c_int;
-        pub fn sched_getscheduler(pid: pid_t) -> c_int;
-        pub fn sched_setaffinity(pid: pid_t, cpusetsize: size_t, mask: *const c_void) -> c_int;
-        pub fn sched_getaffinity(pid: pid_t, cpusetsize: size_t, mask: *mut c_void) -> c_int;
-        // TODO: Other fns guaranteed by `man sched.h`
-    }
-}
-
 pub mod resource {
     //! Bindings to `sys/resource.h`
     use libc::*;
