@@ -7,7 +7,7 @@ use ffi::resource::*;
 pub enum Which {
     Process,
     Group,
-    User
+    User,
 }
 
 /// Set the scheduling priority for the `Which` of the calling process
@@ -29,7 +29,7 @@ pub fn set_priority(which: Which, who: i32, priority: i32) -> Result<(), ()> {
 
     match unsafe { setpriority(c_which, who, priority) } {
         0 => Ok(()),
-        _ => Err(())
+        _ => Err(()),
     }
 }
 
@@ -50,6 +50,6 @@ pub fn get_priority(which: Which, who: i32) -> Result<i32, ()> {
     let priority = unsafe { getpriority(c_which, who) };
     match errno().0 {
         0 => Ok(priority),
-        _ => Err(())
+        _ => Err(()),
     }
 }

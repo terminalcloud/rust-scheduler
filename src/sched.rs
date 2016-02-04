@@ -1,7 +1,7 @@
 //! Set and get scheduling policies
 #[cfg(any(target_os = "linux", target_os = "android", target_os = "emscripten"))]
 use libc::{c_int, sched_param, sched_getscheduler, sched_setscheduler, SCHED_FIFO, SCHED_RR,
-    SCHED_BATCH, SCHED_IDLE, SCHED_OTHER};
+           SCHED_BATCH, SCHED_IDLE, SCHED_OTHER};
 #[cfg(any(target_os = "linux", target_os = "emscripten"))]
 use cpuset::CpuSet;
 
@@ -40,14 +40,14 @@ pub fn set_policy(pid: i32, policy: Policy, priority: i32) -> Result<(), ()> {
         Policy::RoundRobin => SCHED_RR,
         Policy::Batch => SCHED_BATCH,
         Policy::Idle => SCHED_IDLE,
-        Policy::Deadline => SCHED_DEADLINE
+        Policy::Deadline => SCHED_DEADLINE,
     };
     let params = sched_param { sched_priority: priority };
     let params_ptr: *const sched_param = &params;
 
     match unsafe { sched_setscheduler(pid, c_policy, params_ptr) } {
         0 => Ok(()),
-        _ => Err(())
+        _ => Err(()),
     }
 }
 
@@ -68,7 +68,7 @@ pub fn get_policy(pid: i32) -> Result<Policy, ()> {
         SCHED_IDLE => Ok(Policy::Idle),
         SCHED_DEADLINE => Ok(Policy::Deadline),
         -1 => Err(()),
-        policy @ _ => panic!("Policy {} does not exist", policy)
+        policy @ _ => panic!("Policy {} does not exist", policy),
     }
 }
 

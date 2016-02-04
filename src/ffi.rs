@@ -8,9 +8,9 @@ pub mod resource {
     pub const PRIO_USER: c_int = 2;
 
     #[link(name="c")]
-    extern {
+    extern "C" {
         pub fn setpriority(which: c_int, who: c_int, priority: c_int) -> c_int;
         pub fn getpriority(which: c_int, who: c_int) -> c_int;
-        // TODO: Other fns guaranteed by `man resource.h`
+    // TODO: Other fns guaranteed by `man resource.h`
     }
 }
