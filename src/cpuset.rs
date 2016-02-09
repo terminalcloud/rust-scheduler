@@ -1,11 +1,9 @@
 //! A CPU bitmask implementation to be used with the sched_[gs]etaffinity functions.
 
-use libc::c_void;
+use libc::{c_void, cpu_set_t, sched_getaffinity, sched_setaffinity};
 use std::mem;
 use std::ptr;
 use std::cmp;
-
-use ffi::sched::{sched_getaffinity, sched_setaffinity};
 
 type Mask = u64;
 const MASK_BITS: usize = 64;
@@ -28,14 +26,16 @@ impl CpuSet {
     /// Create a new `CpuSet` from a given mask. For example a u64 or a u8.
     pub fn from_mask<T>(mask: T) -> CpuSet {
         let mut cpuset = Self::new(8 * mem::size_of::<T>());
-        unsafe { ptr::write(cpuset.mut_mask_ptr() as *mut T, mask); }
+        unsafe {
+            ptr::write(cpuset.mut_mask_ptr() as *mut T, mask);
+        }
         cpuset
     }
 
     /// Create a new `CpuSet` that with one CPU set as active.
     /// Shorthand for using `new` and `set`
     pub fn single(cpu: usize) -> CpuSet {
-        let mut cpuset = Self::new(cpu+1);
+        let mut cpuset = Self::new(cpu + 1);
         cpuset.set(cpu);
         cpuset
     }
@@ -103,14 +103,18 @@ impl CpuSet {
             Err(())
         } else {
             let mut mask: u64 = 0;
-            unsafe { ptr::copy(self.mask_ptr(), (&mut mask) as *mut _ as *mut c_void, src_size) }
+            unsafe {
+                ptr::copy(self.mask_ptr(),
+                          (&mut mask) as *mut _ as *mut c_void,
+                          src_size)
+            }
             Ok(mask)
         }
     }
 
     /// Sets the affinity described by this `CpuSet` to a given `pid`.
     pub fn set_affinity(&self, pid: i32) -> Result<(), ()> {
-        match unsafe { sched_setaffinity(pid, self.len(), self.mask_ptr()) } {
+        match unsafe { sched_setaffinity(pid, self.len(), self.mask_ptr() as *const cpu_set_t) } {
             0 => Ok(()),
             _ => Err(()),
         }
@@ -119,7 +123,9 @@ impl CpuSet {
     /// Fetch the affinity for a given `pid` as a `CpuSet`.
     pub fn get_affinity(pid: i32, num_cpus: usize) -> Result<CpuSet, ()> {
         let mut cpuset = CpuSet::new(num_cpus);
-        match unsafe { sched_getaffinity(pid, cpuset.len(), cpuset.mut_mask_ptr())} {
+        match unsafe {
+            sched_getaffinity(pid, cpuset.len(), cpuset.mut_mask_ptr() as *mut cpu_set_t)
+        } {
             0 => Ok(cpuset),
             _ => Err(()),
         }
@@ -134,13 +140,13 @@ mod tests {
     #[test]
     fn test_new_one_byte() {
         let mut cpuset = CpuSet::new(7);
-        assert_eq!(MASK_BITS/8, cpuset.len());
+        assert_eq!(MASK_BITS / 8, cpuset.len());
         assert_eq!(0, cpuset.as_u64().unwrap());
         cpuset = CpuSet::new(1);
-        assert_eq!(MASK_BITS/8, cpuset.len());
+        assert_eq!(MASK_BITS / 8, cpuset.len());
         assert_eq!(0, cpuset.as_u64().unwrap());
         cpuset = CpuSet::new(0);
-        assert_eq!(MASK_BITS/8, cpuset.len());
+        assert_eq!(MASK_BITS / 8, cpuset.len());
         assert_eq!(0, cpuset.as_u64().unwrap());
     }
 
@@ -168,7 +174,7 @@ mod tests {
     fn test_single_low() {
         let mask: u64 = 1 << 3;
         let cpuset = CpuSet::single(3);
-        assert_eq!(MASK_BITS/8, cpuset.len());
+        assert_eq!(MASK_BITS / 8, cpuset.len());
         assert_eq!(mask, cpuset.as_u64().unwrap());
     }
 
