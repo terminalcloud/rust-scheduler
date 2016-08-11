@@ -5,7 +5,6 @@
 extern crate errno;
 extern crate libc;
 
-mod ffi;
 mod sched;
 mod resource;
 #[cfg(any(target_os = "linux", target_os = "emscripten"))]
