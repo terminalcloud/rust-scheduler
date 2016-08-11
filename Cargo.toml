@@ -1,6 +1,6 @@
 [package]
 name = "scheduler"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Zach Pomerantz <zach@terminal.com>", "Linus Färnstrand <faern@faern.net>"]
 description = "Binding to set the linux scheduler (priority, policy, affinity, &c.)"
 homepage = "https://github.com/terminalcloud/rust-scheduler"
