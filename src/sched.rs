@@ -34,6 +34,7 @@ pub fn set_self_policy(policy: Policy, priority: i32) -> Result<(), ()> {
 /// Set the scheduling policy for a process
 #[cfg(any(target_os = "linux", target_os = "android", target_os = "emscripten"))]
 pub fn set_policy(pid: i32, policy: Policy, priority: i32) -> Result<(), ()> {
+    use std::mem;
     let c_policy = match policy {
         Policy::Other => SCHED_OTHER,
         Policy::Fifo => SCHED_FIFO,
@@ -42,7 +43,8 @@ pub fn set_policy(pid: i32, policy: Policy, priority: i32) -> Result<(), ()> {
         Policy::Idle => SCHED_IDLE,
         Policy::Deadline => SCHED_DEADLINE,
     };
-    let params = sched_param { sched_priority: priority };
+    let mut params: sched_param = unsafe { mem::zeroed() };
+    params.sched_priority = priority;
     let params_ptr: *const sched_param = &params;
 
     match unsafe { sched_setscheduler(pid, c_policy, params_ptr) } {
