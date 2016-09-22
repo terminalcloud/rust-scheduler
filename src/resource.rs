@@ -66,6 +66,24 @@ mod platform {
         }
     }
 
+    #[cfg(target_env="musl")]
+    pub fn get_priority(which: i32, who: i32) -> Result<i32, ()> {
+        set_errno(Errno(0));
+        let priority = unsafe { getpriority(which, who as u32) };
+        match errno().0 {
+            0 => Ok(priority),
+            _ => Err(()),
+        }
+    }
+
+    #[cfg(target_env="musl")]
+    pub fn set_priority(which: i32, who: i32, priority: i32) -> Result<(), ()> {
+        match unsafe { setpriority(which, who as u32, priority) } {
+            0 => Ok(()),
+            _ => Err(()),
+        }
+    }
+
     // FreeBSD
     #[cfg(target_os="freebsd")]
     pub fn get_priority(which: i32, who: i32) -> Result<i32, ()> {
