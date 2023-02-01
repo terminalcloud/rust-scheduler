@@ -46,7 +46,7 @@ impl CpuSet {
     pub fn set(&mut self, cpu: usize) {
         let elem = cpu / MASK_BITS;
         let bit = cpu % MASK_BITS;
-        while elem > self.mask.len() {
+        while elem >= self.mask.len() {
             self.mask.push(0);
         }
         self.mask[elem] |= 1 << bit;
