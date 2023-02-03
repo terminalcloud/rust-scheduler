@@ -1,9 +1,9 @@
 //! A CPU bitmask implementation to be used with the sched_[gs]etaffinity functions.
 
 use libc::{c_void, cpu_set_t, sched_getaffinity, sched_setaffinity};
+use std::cmp;
 use std::mem;
 use std::ptr;
-use std::cmp;
 
 type Mask = u64;
 const MASK_BITS: usize = 64;
@@ -46,7 +46,7 @@ impl CpuSet {
     pub fn set(&mut self, cpu: usize) {
         let elem = cpu / MASK_BITS;
         let bit = cpu % MASK_BITS;
-        while elem > self.mask.len() {
+        while elem >= self.mask.len() {
             self.mask.push(0);
         }
         self.mask[elem] |= 1 << bit;
@@ -59,7 +59,7 @@ impl CpuSet {
         let elem = cpu / MASK_BITS;
         let bit = cpu % MASK_BITS;
         if elem < self.mask.len() {
-            self.mask[elem] ^= 1 << bit;
+            self.mask[elem] &= !(1 << bit);
         }
     }
 
@@ -104,9 +104,11 @@ impl CpuSet {
         } else {
             let mut mask: u64 = 0;
             unsafe {
-                ptr::copy(self.mask_ptr(),
-                          (&mut mask) as *mut _ as *mut c_void,
-                          src_size)
+                ptr::copy(
+                    self.mask_ptr(),
+                    (&mut mask) as *mut _ as *mut c_void,
+                    src_size,
+                )
             }
             Ok(mask)
         }
@@ -134,8 +136,8 @@ impl CpuSet {
 
 #[cfg(test)]
 mod tests {
-    use std::ops::BitXor;
     use super::{CpuSet, MASK_BITS};
+    use std::ops::BitXor;
 
     #[test]
     fn test_new_one_byte() {
@@ -201,6 +203,16 @@ mod tests {
         for i in 0..max {
             assert!(cpuset.is_set(i));
         }
+    }
+
+    #[test]
+    fn test_clear() {
+        let mut cpuset = CpuSet::from_mask(0b01010101);
+        cpuset.clear(0);
+        cpuset.clear(1);
+        cpuset.clear(2);
+        cpuset.clear(3);
+        assert_eq!(cpuset.as_u64().unwrap(), 0b01010000);
     }
 
     #[test]
